@@ -1,0 +1,8 @@
+Thumbs.db
+*.pyc
+# Seeing certain images will ruin the surprises. ;^)
+*.jpg
+*.jpeg
+*.png
+*.gif
+
