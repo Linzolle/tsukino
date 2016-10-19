@@ -534,7 +534,7 @@ class Tsukino(discord.Client):
                         with open('config/coins.json', 'r') as fp:
                             fr = json.load(fp)
                             fr[players[0].id] += pot
-                            with open('config.coins.json', 'w') as fo:
+                            with open('config/coins.json', 'w') as fo:
                                 json.dump(fr, fo, indent=4, sort_keys=True)
                         return Response('Everyone but {0} folded! Congratulations {0}, you have won {1} coins!'.format(players[i].name, pot))
                         
