@@ -1,3 +1,5 @@
+# I don't know who made this class because I found it somewhere on StackExchange a long time ago. Thank you Anon, whoever you are.
+
 import random
 
 class Card:
