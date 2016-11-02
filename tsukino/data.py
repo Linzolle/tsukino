@@ -1,11 +1,11 @@
 import discord
 
-botVersion = '1.0.0'
+botVersion = '1.0.1'
 
 introText = 'Hello! I\'m a bot created by Linzolle to satisfy her eternal lust for programming. All my commands start with `{prefix}`, so type `about` to learn more about me, or `help` to display my list of commands!'
 
 changeLog = '''Version {}:
-Completely overhauled everything! Bot should be much more efficient now. (Don't worry, your coins are still here.)'''.format(botVersion)
+Bug fixes so the bot doesn't completely fuck up.'''.format(botVersion)
 
 helpText = '''The current command prefix is `{prefix}`
 
@@ -57,7 +57,8 @@ randomText = '''`samoyed` Posts a random picture of Linzolle\'s favourite dog br
 
 `weapon` Picks a weapon and style from the Monster Hunter series.'''
 
-aboutText = '''Hello, my name is Tsukino Mai　（月野舞）, and you\'re viewing version %s of me! I was created by Linzolle#2608 in order for her to create a customised bot based on whatever functions she wanted to implement. If you have any questions, join Linzolle\'s development server https://discord.gg/Qj4HXeX, or contact her on her Twitter, @Linzolle.
+aboutText = '''Hello, my name is Tsukino Mai（月野舞）, and you\'re viewing version %s of me! I was created by Linzolle#2608 in order for her to create a customised bot based on whatever functions she wanted to implement. If you have any questions, join Linzolle\'s development server https://discord.gg/Qj4HXeX, or contact her on her Twitter, @Linzolle.
 You can call me Mai, and use female pronouns for me. (Even though I\'m actually just a sequence of binary programmed to respond to you!)
 I run on Python 3.5, using the discord.py library created by Rapptz on version %s.
-(see here for more details: https://github.com/Rapptz/discord.py)''' % (botVersion, discord.__version__)
+(see here for more details: https://github.com/Rapptz/discord.py)
+(view my source code on GitHub like you're looking at my panties: https://github.com/Linzolle/tsukino)''' % (botVersion, discord.__version__)

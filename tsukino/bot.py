@@ -56,6 +56,14 @@ class Tsukino(discord.Client):
             await self.send_message(server, introText.format(prefix=self.config.prefix))
         except discord.Forbidden:
             log.info('Tried to send a forbidden intro message.')
+            
+    async def add_5_coins(self):
+        with open('config/coins.json', 'r') as fp:
+            fr = json.load(fp)
+            for user in fr:
+                fr[user] += 5
+            with open('config/coins.json', 'w') as fo:
+                json.dump(fr, fo, indent=4, sort_keys=True)
         
     async def cmd_hello(self):
         '''
@@ -138,11 +146,11 @@ class Tsukino(discord.Client):
         '''
         if args:
             query = ' '.join(args)
-            response = urllib.request.urlopen('https://www.calcatraz.com/calculator/api?c=' + urllib.parse.quote(query))
-            if response.read().decode('utf-8').strip() == 'answer':
+            answer = urllib.request.urlopen('https://www.calcatraz.com/calculator/api?c=' + urllib.parse.quote(query))
+            answer = answer.read().decode('utf-8').strip()
+            if answer == 'answer':
                 raise CommandError('Oops, I couldn\'t find a suitable answer for that.')
-            else:
-                return Response(response.read().decode('utf-8').strip())
+            return Response(answer)
         else:
             raise CommandError('Oops, you need to supply me with an expression to evaluate. `eval [expression]`')
         
@@ -159,6 +167,8 @@ class Tsukino(discord.Client):
                 return Response('{}\n{}\n{}'.format(res['items'][0]['link'], res['items'][1]['link'], res['items'][2]['link']))
             except KeyError:
                 raise CommandError('I didn\'t find any results for that query.')
+            except googleapiclient.errors.HttpError:
+                return Response('Oops, I have unfortunately used up my daily quota of image searches. I hate Google for limiting me.')
         else:
             raise CommandError('Oops, you need to supply me with an image query to search. `image [query]`')
             
@@ -174,6 +184,8 @@ class Tsukino(discord.Client):
                 return Response('{}\n{}\n{}'.format(res['items'][0]['link'], res['items'][1]['link'], res['items'][2]['link']))
             except KeyError:
                 raise CommandError('I didn\'t find any results for that query.')
+            except googleapiclient.errors.HttpError:
+                return Response('Oops, I have unfortunately used up my daily quota of image searches. I hate Google for limiting me.')
         else:
             raise CommandError('Oops, you need to supply me with an image query to search. `ximage [query]`')
             
@@ -378,17 +390,17 @@ class Tsukino(discord.Client):
         Play poker with your friends! Try `poker help` to display the rankings of different hands. 
         `poker [bet]`
         '''
-        if message.channel.is_private:
-            return Response('Did you just try to start a poker game in our private messages? Go find some friends to play with!')
-            
-        if message.channel.id in self.game_channels:
-            return Response('You can\'t start multiple games at once! You\'re pretty silly. Try playing in a different channel if you really want to.')
-            
         if cmd == 'help':
             return Response('http://www.24pokersite.com/wp-content/uploads/2011/01/Poker-_Hand_Chart.gif')
         elif not cmd:
+            if message.channel.is_private:
+                return Response('Did you just try to start a poker game in our private messages? Go find some friends to play with!')
             raise CommandError('Oops, you need to specify a starting bet! `poker [bet]`')
         else:
+            if message.channel.is_private:
+                return Response('Did you just try to start a poker game in our private messages? Go find some friends to play with!')
+            if message.channel.id in self.game_channels:
+                return Response('You can\'t start multiple games at once! You\'re pretty silly. Try playing in a different channel if you really want to.')
             try:
                 bet = int(cmd)
             except ValueError:
@@ -512,19 +524,10 @@ class Tsukino(discord.Client):
                 with open('config/coins.json', 'r') as fp:
                     fr = json.load(fp)
                     coin = fr[players[i].id]
-                pm = await self.send_message(players[i], 'The current bet is {}, there are {} coins in the pot, and you have {} coins.\nWould you like to `fold`, `call`, or `raise`?'.format(bet, pot, coin))
-                def isHand(msg):
-                    if msg.content.startswith('%sfold' % self.config.prefix):
-                        return True
-                    if msg.content.startswith('%scall' % self.config.prefix):
-                        return True
-                    if msg.content.startswith('%sraise' % self.config.prefix):
-                        return True
-                msg = await self.wait_for_message(channel=pm.channel, check=isHand)
-                
-                if msg.content.startswith('%sfold' % self.config.prefix):
-                    await self.send_message(players[i], 'You have forfeited the game.')
-                    await self.send_message(message.channel, '{} has folded their cards, forfeiting the game.'.format(players[i].name))
+                    
+                if coin < bet:
+                    await self.send_message(players[i], 'Someone raised the bet past the amount you own. Your only choice now is to fold.')
+                    await self.send_message(message.channel, '{} didn\'t have enough money to fulfil the raise, so they had to fold.'.format(players[i].name))
                     s.pop(i)
                     hlist.pop(i)
                     players.pop(i)
@@ -537,11 +540,20 @@ class Tsukino(discord.Client):
                             with open('config/coins.json', 'w') as fo:
                                 json.dump(fr, fo, indent=4, sort_keys=True)
                         return Response('Everyone but {0} folded! Congratulations {0}, you have won {1} coins!'.format(players[i].name, pot))
-                        
-                if msg.content.startswith('%scall' % self.config.prefix):
-                    if coin < bet:
-                        await self.send_message(players[i], 'Someone raised the bet past the amount you own. Your only choice now is to fold.')
-                        await self.send_message(message.channel, '{} didn\'t have enough money to fulfil the raise, so they had to fold.'.format(players[i].name))
+                else:        
+                    pm = await self.send_message(players[i], 'The current bet is {}, there are {} coins in the pot, and you have {} coins.\nWould you like to `fold`, `call`, or `raise`?'.format(bet, pot, coin))
+                    def isHand(msg):
+                        if msg.content.startswith('%sfold' % self.config.prefix):
+                            return True
+                        if msg.content.startswith('%scall' % self.config.prefix):
+                            return True
+                        if msg.content.startswith('%sraise' % self.config.prefix):
+                            return True
+                    msg = await self.wait_for_message(channel=pm.channel, check=isHand)
+                    
+                    if msg.content.startswith('%sfold' % self.config.prefix):
+                        await self.send_message(players[i], 'You have forfeited the game.')
+                        await self.send_message(message.channel, '{} has folded their cards, forfeiting the game.'.format(players[i].name))
                         s.pop(i)
                         hlist.pop(i)
                         players.pop(i)
@@ -554,7 +566,8 @@ class Tsukino(discord.Client):
                                 with open('config/coins.json', 'w') as fo:
                                     json.dump(fr, fo, indent=4, sort_keys=True)
                             return Response('Everyone but {0} folded! Congratulations {0}, you have won {1} coins!'.format(players[i].name, pot))
-                    else:
+                            
+                    if msg.content.startswith('%scall' % self.config.prefix):
                         await self.send_message(players[i], 'You have called your cards. You push {} coins into the pot.'.format(bet))
                         await self.send_message(message.channel, '{} has called their cards, pushing {} coins into the pot.'.format(players[i].name, bet))
                         pot += bet
@@ -563,36 +576,36 @@ class Tsukino(discord.Client):
                             fr[players[i].id] -= bet
                             with open('config/coins.json', 'w') as fo:
                                 json.dump(fr, fo, indent=4, sort_keys=True)
-                                
-                if msg.content.startswith('%sraise' % self.config.prefix):      
-                    def isRaise(msg):
-                        try:
-                            int(msg.content)
-                            return True
-                        except ValueError:
-                            return False
+                                    
+                    if msg.content.startswith('%sraise' % self.config.prefix):      
+                        def isRaise(msg):
+                            try:
+                                int(msg.content)
+                                return True
+                            except ValueError:
+                                return False
+                            
+                        await self.send_message(players[i], 'How much do you want to raise?')
                         
-                    await self.send_message(players[i], 'How much do you want to raise?')
-                    
-                    while True:
-                        msg = await self.wait_for_message(channel=pm.channel, check=isRaise)
-                        ras = int(msg.content)
-                        if ras > coin - bet:
-                            await self.send_message(players[i], 'You don\'t have enough coins to raise by that much! Try a lower number.')
-                        if ras <= 0:
-                            await self.send_message(players[i], 'You cannot raise by zero or a negative amount. Are you trying to cheat? Try a positive number.')
-                        if ras > 0 and ras < coin - bet:
-                            break
-                                
-                    bet += ras
-                    pot += bet
-                    await self.send_message(players[i], 'You have raised the bet by {}. You push {} coins into the pot.'.format(ras, bet))
-                    await self.send_message(message.channel, '{} has raised the bet by {}, pushing {} coins into the pot.'.format(players[i].name, ras, bet))
-                    with open('config/coins.json', 'r') as fp:
-                        fr = json.load(fp)
-                        fr[players[i].id] -= bet
-                        with open('config/coins.json', 'w') as fo:
-                            json.dump(fr, fo, indent=4, sort_keys=True)
+                        while True:
+                            msg = await self.wait_for_message(channel=pm.channel, check=isRaise)
+                            ras = int(msg.content)
+                            if ras > coin - bet:
+                                await self.send_message(players[i], 'You don\'t have enough coins to raise by that much! Try a lower number.')
+                            if ras <= 0:
+                                await self.send_message(players[i], 'You cannot raise by zero or a negative amount. Are you trying to cheat? Try a positive number.')
+                            if ras > 0 and ras < coin - bet:
+                                break
+                                    
+                        bet += ras
+                        pot += bet
+                        await self.send_message(players[i], 'You have raised the bet by {}. You push {} coins into the pot.'.format(ras, bet))
+                        await self.send_message(message.channel, '{} has raised the bet by {}, pushing {} coins into the pot.'.format(players[i].name, ras, bet))
+                        with open('config/coins.json', 'r') as fp:
+                            fr = json.load(fp)
+                            fr[players[i].id] -= bet
+                            with open('config/coins.json', 'w') as fo:
+                                json.dump(fr, fo, indent=4, sort_keys=True)
                 i += 1
             
         winner = max(s)
@@ -654,31 +667,41 @@ class Tsukino(discord.Client):
         
         return Response('{} wins {} coins with their hand, {}! Congrats!'.format(players[winnerIndex].name, pot, hlist[winnerIndex]))
                         
-    # There was a secret command here, but I hid it.
+    #Hidden secrets
+        
+    def split(self, s):
+        lex = shlex.shlex(s)
+        lex.quotes = '"'
+        lex.whitespace_split = True
+        lex.commenters = ''
+        return list(lex)
         
     async def on_message(self, message):
-        await self.wait_until_ready()
-        
-        message_content = message.content.strip()
-        
-        if not message_content.startswith(self.config.prefix):
-            return
-            
-        if message.author == self.user:
-            return
-            
-        command, *args = shlex.split(message_content)
-        command = command[len(self.config.prefix):].lower().strip()
-        
-        handler = getattr(self, 'cmd_%s' % command, None)
-        
-        if not handler:
-            return
-        
-        argspec = inspect.signature(handler)
-        params = argspec.parameters.copy()
-        
         try:
+            await self.wait_until_ready()
+            
+            message_content = message.content.strip()
+            
+            if not message_content.startswith(self.config.prefix):
+                return
+                
+            if message.author == self.user:
+                return
+                
+            try:
+                command, *args = shlex.split(message_content)
+                command = command[len(self.config.prefix):].lower().strip()
+            except ValueError:
+                raise CommandError('Oops, you didn\'t close your quotation marks!')
+            
+            handler = getattr(self, 'cmd_%s' % command, None)
+            
+            if not handler:
+                return
+            
+            argspec = inspect.signature(handler)
+            params = argspec.parameters.copy()
+        
             handler_kwargs = {}
             
             if params.pop('message', None):
@@ -721,4 +744,9 @@ class Tsukino(discord.Client):
                         pass
                     
         except CommandError as e:
-            await self.send_message(message.channel, e.message)
+            try:
+                await self.send_message(message.channel, e.message)
+            except discord.errors.Forbidden:
+                print('Tried to send a forbidden CommandError.')
+        except discord.errors.Forbidden:
+            print('Tried to send a forbidden message.')
