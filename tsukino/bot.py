@@ -723,7 +723,7 @@ class Tsukino(discord.Client):
                 response = await handler(**handler_kwargs)
             except discord.DiscordException as e:
                 response = None
-                print('Exception on {}({}) in channel {}\n\t{}'.format(message.server.name, message.server.id, message.channel.name, traceback.format_exc()))
+                log.info('Exception on {}({}) in channel {}\n\t{}'.format(message.server.name, message.server.id, message.channel.name, traceback.format_exc()))
                 
             if response and isinstance(response, Response):
                 content = response.content
@@ -747,6 +747,6 @@ class Tsukino(discord.Client):
             try:
                 await self.send_message(message.channel, e.message)
             except discord.errors.Forbidden:
-                print('Tried to send a forbidden CommandError.')
+                log.info('Tried to send a forbidden CommandError.')
         except discord.errors.Forbidden:
-            print('Tried to send a forbidden message.')
+            log.info('Tried to send a forbidden message.')
