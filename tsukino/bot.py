@@ -8,6 +8,7 @@ import urllib.request
 import urllib.parse
 import os
 import json
+from datetime import datetime
 
 import discord
 from googleapiclient.discovery import build
@@ -42,13 +43,14 @@ class Tsukino(discord.Client):
         self.game_channels = []
         
     def run(self):
+        self.start_time = datetime.utcnow()
         return super().run(self.config.token)
         
     async def on_ready(self):
         print('Logged in as %s with ID %s at %s' % (self.user.name, self.user.id, time.asctime(time.localtime())))
         print('Bot version: v' + botVersion)
         print('I am online in %s servers.' % len(self.servers))
-        await self.change_presence(game=discord.Game(name='{}help'.format(self.config.prefix)))
+        await self.fun_status()
         
     async def on_server_join(self, server):
         log.info('Joined a new server, {} ({})'.format(server.name, server.id))
@@ -56,6 +58,19 @@ class Tsukino(discord.Client):
             await self.send_message(server, introText.format(prefix=self.config.prefix))
         except discord.Forbidden:
             log.info('Tried to send a forbidden intro message.')
+            
+    async def fun_status(self):
+        i = 0
+        while True:
+            current_time = datetime.utcnow() - self.start_time
+            
+            game_list = ['{}help'.format(self.config.prefix), 'in {} servers'.format(len(self.servers)), 'for {}d{}h{}m'.format(current_time.days, current_time.seconds // 3600 % 24, current_time.seconds // 60 % 60), 'Poker']
+            
+            i = i % len(game_list)
+            
+            await self.change_presence(game=discord.Game(name=game_list[i]))
+            i += 1
+            await asyncio.sleep(15)
             
     async def add_5_coins(self):
         with open('config/coins.json', 'r') as fp:
@@ -622,7 +637,7 @@ class Tsukino(discord.Client):
             for i in range(len(players)):
                 with open('config/coins.json', 'r') as fp:
                     fr = json.load(fp)
-                    fr[players[i]] += int(pot / len(players))
+                    fr[players[i].id] += int(pot / len(players))
                     with open('config/coins.json', 'w') as fo:
                         json.dump(fr, fo, indent=4, sort_keys=True)
             self.game_channels.remove(message.channel.id)
@@ -631,7 +646,7 @@ class Tsukino(discord.Client):
             for i in range(2):
                 with open('config/coins.json', 'r') as fp:
                     fr = json.load(fp)
-                    fr[players[i]] += int(pot / 2)
+                    fr[players[i].id] += int(pot / 2)
                     with open('config/coins.json', 'w') as fo:
                         json.dump(fr, fo, indent=4, sort_keys=True)
             self.game_channels.remove(message.channel.id)
@@ -640,7 +655,7 @@ class Tsukino(discord.Client):
             for i in range(3):
                 with open('config/coins.json', 'r') as fp:
                     fr = json.load(fp)
-                    fr[players[i]] += int(pot / 3)
+                    fr[players[i].id] += int(pot / 3)
                     with open('config/coins.json', 'w') as fo:
                         json.dump(fr, fo, indent=4, sort_keys=True)
             self.game_channels.remove(message.channel.id)
@@ -649,7 +664,7 @@ class Tsukino(discord.Client):
             for i in range(4):
                 with open('config/coins.json', 'r') as fp:
                     fr = json.load(fp)
-                    fr[players[i]] += int(pot / 4)
+                    fr[players[i].id] += int(pot / 4)
                     with open('config/coins.json', 'w') as fo:
                         json.dump(fr, fo, indent=4, sort_keys=True)
             self.game_channels.remove(message.channel.id)
@@ -666,8 +681,16 @@ class Tsukino(discord.Client):
         self.game_channels.remove(message.channel.id)
         
         return Response('{} wins {} coins with their hand, {}! Congrats!'.format(players[winnerIndex].name, pot, hlist[winnerIndex]))
-                        
-    #Hidden secrets
+        
+    async def cmd_uptime(self):
+        '''
+        Find out how long it's been since I got out of bed!
+        '''
+        current_time = datetime.utcnow() - self.start_time
+        time_string = 'I\'ve been awake for {} days, {} hours, {} minutes, and {} seconds.'.format(current_time.days, current_time.seconds // 3600 % 24, current_time.seconds // 60 % 60, current_time.seconds % 60)
+        return Response(time_string)
+
+    # Hidden secrets
         
     def split(self, s):
         lex = shlex.shlex(s)

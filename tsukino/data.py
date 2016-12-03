@@ -1,11 +1,13 @@
 import discord
 
-botVersion = '1.0.1'
+botVersion = '1.0.2'
 
 introText = 'Hello! I\'m a bot created by Linzolle to satisfy her eternal lust for programming. All my commands start with `{prefix}`, so type `about` to learn more about me, or `help` to display my list of commands!'
 
 changeLog = '''Version {}:
-Bug fixes so the bot doesn't completely fuck up.'''.format(botVersion)
+Bug fixes so the bot doesn't completely fuck up.
+Added `uptime` command.
+Added cycling status messages.'''.format(botVersion)
 
 helpText = '''The current command prefix is `{prefix}`
 
@@ -37,7 +39,9 @@ helpText = '''The current command prefix is `{prefix}`
 
 `image [query]` Grab the first three images from Google Images for a query.
 
-`eval [query]` Evaluate a mathematical expression or similar things, such as \'65kg to pounds\''''
+`eval [query]` Evaluate a mathematical expression or similar things, such as \'65kg to pounds\'
+
+`uptime` Find out how long it\'s been since I woke up.'''
 
 randomText = '''`samoyed` Posts a random picture of Linzolle\'s favourite dog breed, the Samoyed! (`{prefix}samoyed` is aliased to this.)
 
