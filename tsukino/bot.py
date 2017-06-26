@@ -284,6 +284,13 @@ class Tsukino(discord.Client):
         fr[user.id] = 100
         with open('config/coins.json', 'w') as fo:
             json.dump(fr, fo, indent=4, sort_keys=True)
+            
+        with open('config/coin_timer.json', 'r') as fp:
+            fp = json.load(fp)
+            fp[user.id] = int(time.time())
+            with open('config/coin_timer.json', 'w') as fo:
+                json.dump(fp, fo, indent=4, sort_keys=True)
+                
         return Response('{} has joined the coin party! You start off with 100 coins.'.format(user.name))
                 
     async def cmd_coins(self, message, arg1=None, arg2=None, arg3=None):
@@ -299,7 +306,36 @@ class Tsukino(discord.Client):
                 else:
                     return await self.add_to_coin(message.author, fr)
         elif arg1 == 'help':
-            return Response('`give [amount] [username]` Donate your coins to another user. Please note you must use their actual username, and not the server\'s nickname. If there are spaces in their name, wrap their name in quotation marks. If two people have the same name, use the `name#0000` format to pick out a specific person.', private=True)
+            return Response('`give [amount] [username]` Donate your coins to another user. Please note you must use their actual username, and not the server\'s nickname. If there are spaces in their name, wrap their name in quotation marks. If two people have the same name, use the `name#0000` format to pick out a specific person.\n`add` Once per day, I will pay you 10 coins for talking to me. :heart:', private=True)
+        elif arg1 == 'add':
+            with open('config/coin_timer.json', 'r') as fp:
+                fp = json.load(fp)
+                try:
+                    old_time = fp[message.author.id]
+                except KeyError:
+                    raise CommandError('Oops, you aren\'t in the coin party. Try `coins`')
+                
+            current_time = int(time.time())
+            time_difference = current_time - old_time
+            
+            if time_difference >= 86400:
+                fp[message.author.id] = current_time
+                with open('config/coin_timer.json', 'w') as fo:
+                    json.dump(fp, fo, indent=4, sort_keys=True)
+                
+                with open('config/coins.json', 'r') as fp:
+                    fp = json.load(fp)
+                    fp[message.author.id] += 10
+                    with open('config/coins.json', 'w') as fo:
+                        json.dump(fp, fo, indent=4, sort_keys=True)
+                    
+                return Response('Added 10 coins to your wallet! You can get more in 24 hours.')
+            else:
+                hours = old_time + 86400
+                hours = hours - current_time
+                hours = int(round(hours / 3600))
+                return Response('Oops, you haven\'t waited long enough to get more coins. Try again in {} hours.'.format(hours))
+                
         elif arg1 == 'give':
             if arg2:
                 try:

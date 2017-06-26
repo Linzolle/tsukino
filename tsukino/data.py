@@ -1,13 +1,14 @@
 import discord
 
-botVersion = '1.0.2'
+botVersion = '1.0.3'
 
 introText = 'Hello! I\'m a bot created by Linzolle to satisfy her eternal lust for programming. All my commands start with `{prefix}`, so type `about` to learn more about me, or `help` to display my list of commands!'
 
 changeLog = '''Version {}:
 Bug fixes so the bot doesn't completely fuck up.
 Added `uptime` command.
-Added cycling status messages.'''.format(botVersion)
+Added cycling status messages.
+Added `coins add` so that you have a way to acquire more coins when you run out. <3'''.format(botVersion)
 
 helpText = '''The current command prefix is `{prefix}`
 
