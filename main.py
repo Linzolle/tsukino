@@ -1,3 +1,4 @@
 from tsukino import Tsukino
 
-Tsukino().run()
+while True:
+    Tsukino().run()

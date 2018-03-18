@@ -8,6 +8,7 @@ import urllib.request
 import urllib.parse
 import os
 import json
+import math
 from datetime import datetime
 
 import discord
@@ -60,25 +61,17 @@ class Tsukino(discord.Client):
             log.info('Tried to send a forbidden intro message.')
             
     async def fun_status(self):
-        i = 0
+        status_progress = 0
         while True:
             current_time = datetime.utcnow() - self.start_time
             
             game_list = ['{}help'.format(self.config.prefix), 'in {} servers'.format(len(self.servers)), 'for {}d{}h{}m'.format(current_time.days, current_time.seconds // 3600 % 24, current_time.seconds // 60 % 60), 'Poker']
             
-            i = i % len(game_list)
+            status_progress = status_progress % len(game_list)
             
-            await self.change_presence(game=discord.Game(name=game_list[i]))
-            i += 1
+            await self.change_presence(game=discord.Game(name=game_list[status_progress]))
+            status_progress += 1
             await asyncio.sleep(15)
-            
-    async def add_5_coins(self):
-        with open('config/coins.json', 'r') as fp:
-            fr = json.load(fp)
-            for user in fr:
-                fr[user] += 5
-            with open('config/coins.json', 'w') as fo:
-                json.dump(fr, fo, indent=4, sort_keys=True)
         
     async def cmd_hello(self):
         '''
@@ -135,7 +128,7 @@ class Tsukino(discord.Client):
         I couldn't think of a witty response to put here.
         '''
         msg = await self.send_message(message.channel, 'Pong!')
-        differ = (message.timestamp - msg.timestamp)
+        differ = (msg.timestamp - message.timestamp)
         await self.edit_message(msg, 'Pong! {:d}ms'.format(int(differ.microseconds/1000)))
         
     async def cmd_choose(self, args=None):
@@ -154,10 +147,10 @@ class Tsukino(discord.Client):
         '''
         return Response('images/yikes.JPG', file=True)
         
-    async def cmd_eval(self, args=None):
+    async def cmd_calc(self, args=None):
         '''
         Type some sort of thing you'd put in Google to do math for you.
-        `eval [expression]`
+        `calc [expression]`
         '''
         if args:
             query = ' '.join(args)
@@ -182,8 +175,8 @@ class Tsukino(discord.Client):
                 return Response('{}\n{}\n{}'.format(res['items'][0]['link'], res['items'][1]['link'], res['items'][2]['link']))
             except KeyError:
                 raise CommandError('I didn\'t find any results for that query.')
-            except googleapiclient.errors.HttpError:
-                return Response('Oops, I have unfortunately used up my daily quota of image searches. I hate Google for limiting me.')
+            except:
+                raise CommandError('I have ran out of my daily number (100) of allowed searches. Sorry, try again later!')
         else:
             raise CommandError('Oops, you need to supply me with an image query to search. `image [query]`')
             
@@ -199,8 +192,8 @@ class Tsukino(discord.Client):
                 return Response('{}\n{}\n{}'.format(res['items'][0]['link'], res['items'][1]['link'], res['items'][2]['link']))
             except KeyError:
                 raise CommandError('I didn\'t find any results for that query.')
-            except googleapiclient.errors.HttpError:
-                return Response('Oops, I have unfortunately used up my daily quota of image searches. I hate Google for limiting me.')
+            except:
+                raise CommandError('I have ran out of my daily number (100) of allowed searches. Sorry, try again later!')
         else:
             raise CommandError('Oops, you need to supply me with an image query to search. `ximage [query]`')
             
@@ -325,7 +318,11 @@ class Tsukino(discord.Client):
                 
                 with open('config/coins.json', 'r') as fp:
                     fp = json.load(fp)
-                    fp[message.author.id] += 10
+                    try:
+                        fp[message.author.id] += 10
+                    except KeyError:
+                        fp[message.author.id] = 100
+                        return Response('Oops, something happened while managing your coins. Reset them to 100.')
                     with open('config/coins.json', 'w') as fo:
                         json.dump(fp, fo, indent=4, sort_keys=True)
                     
@@ -333,8 +330,19 @@ class Tsukino(discord.Client):
             else:
                 hours = old_time + 86400
                 hours = hours - current_time
-                hours = int(round(hours / 3600))
-                return Response('Oops, you haven\'t waited long enough to get more coins. Try again in {} hours.'.format(hours))
+                hours = hours // 3600
+                if (hours > 0):
+                    return Response('Oops, you haven\'t waited long enough to get more coins. Try again in {} hours.'.format(hours))
+                else:
+                    minutes = old_time + 86400
+                    minutes = minutes - current_time
+                    minutes = minutes // 60
+                    if (minutes > 0):
+                        return Response('Oops, you haven\'t waited long enough to get more coins. Try again in {} minutes.'.format(minutes))
+                    else:
+                        seconds = old_time + 86400
+                        seconds = seconds - current_time
+                        return Response('Oops, you haven\'t waited long enough to get more coins. Try again in {} seconds.'.format(seconds))
                 
         elif arg1 == 'give':
             if arg2:
@@ -366,7 +374,7 @@ class Tsukino(discord.Client):
                                         json.dump(fr, fo, indent=4, sort_keys=True)
                                     return Response('Successfully gave {} {} of {}\'s coins!'.format(user.name, arg2, message.author.name))
                                 else:
-                                    await self.send_message(message.channel, 'Oops, {} is not in the coin party. I will add them right now. You will need to use the `coin` function again.'.format(user.name))
+                                    await self.send_message(message.channel, 'Oops, {} is not in the coin party. I will add them right now. You will need to use the `coins` function again.'.format(user.name))
                                     return await self.add_to_coin(user, fr)
                         else:
                             raise CommandError('Oops, that person does not exist. Please note names are case-sensitive. `give [amount] [username]`')
@@ -417,14 +425,14 @@ class Tsukino(discord.Client):
             
             win = 0
             
-            if (line1 == line2 and line1 != 1) or (line1 == line3 and line1 != 1) or (line2 == line3 and line2 != 1):
-                win = bet
-            elif line1 == 2 and line2 == 2 and line3 == 2:
+            if line1 == 2 and line2 == 2 and line3 == 2:
                 win = bet * 2
             elif line1 == 3 and line2 == 3 and line3 == 3:
                 win = bet * 3
             elif line1 == 4 and line2 == 4 and line3 == 4:
                 win = bet * 4
+            elif (line1 == line2 and line1 != 1) or (line1 == line3 and line1 != 1) or (line2 == line3 and line2 != 1):
+                win = bet
                 
             coins += win
             fr[message.author.id] = coins
@@ -725,8 +733,6 @@ class Tsukino(discord.Client):
         current_time = datetime.utcnow() - self.start_time
         time_string = 'I\'ve been awake for {} days, {} hours, {} minutes, and {} seconds.'.format(current_time.days, current_time.seconds // 3600 % 24, current_time.seconds // 60 % 60, current_time.seconds % 60)
         return Response(time_string)
-
-    # Hidden secrets
         
     def split(self, s):
         lex = shlex.shlex(s)
@@ -747,16 +753,19 @@ class Tsukino(discord.Client):
             if message.author == self.user:
                 return
                 
-            try:
-                command, *args = shlex.split(message_content)
-                command = command[len(self.config.prefix):].lower().strip()
-            except ValueError:
-                raise CommandError('Oops, you didn\'t close your quotation marks!')
+            command = message_content.split()[0]
+            command = command[len(self.config.prefix):].lower().strip()
             
             handler = getattr(self, 'cmd_%s' % command, None)
             
             if not handler:
                 return
+                
+            try:
+                command, *args = self.split(message_content)
+                command = command[len(self.config.prefix):].lower().strip()
+            except ValueError:
+                raise CommandError('Oops, you didn\'t close your quotation marks!')
             
             argspec = inspect.signature(handler)
             params = argspec.parameters.copy()
