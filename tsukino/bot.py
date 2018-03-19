@@ -15,7 +15,7 @@ import discord
 from googleapiclient.discovery import build
 
 from .config import Config
-from .data import botVersion, helpText, changeLog, aboutText, introText, randomText
+from .data import botVersion, helpText, changeLog, aboutText, introText, randomText, coinsText
 from .exception import CommandError
 from .response import Response
 from . import poker
