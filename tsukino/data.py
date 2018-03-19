@@ -44,23 +44,27 @@ helpText = '''The current command prefix is `{prefix}`
 
 `uptime` Find out how long it\'s been since I woke up.'''
 
-randomText = '''`samoyed` Posts a random picture of Linzolle\'s favourite dog breed, the Samoyed! (`{prefix}samoyed` is aliased to this.)
+randomText = '''`random samoyed` Posts a random picture of Linzolle\'s favourite dog breed, the Samoyed! (`{prefix}samoyed` is aliased to this.)
 
-`shiba` Like the Samoyed command, but with Shibas. (`{prefix}shiba` is aliased to this.)
+`random shiba` Like the Samoyed command, but with Shibas. (`{prefix}shiba` is aliased to this.)
 
-`husky` Snow dogger. (`{prefix}husky` is aliased to this.)
+`random husky` Snow dogger. (`{prefix}husky` is aliased to this.)
 
-`corgi` Follow @IAmCorgii on Twitter! (`{prefix}corgi` is aliased to this.)
+`random corgi` Follow @IAmCorgii on Twitter! (`{prefix}corgi` is aliased to this.)
 
-`rat` Posts a random picture of Linzolle\'s boyfriend\'s favourite animal, a rat! (He made her do this; `{prefix}rat` is aliased to this.)
+`random rat` Posts a random picture of Linzolle\'s boyfriend\'s favourite animal, a rat! (He made her do this; `{prefix}rat` is aliased to this.)
 
-`range [intMin] [intMax]` Picks a random integer between two integers you specify, in which intMin and intMax are the two integers. (No brackets, inclusive)
+`random range [intMin] [intMax]` Picks a random integer between two integers you specify, in which intMin and intMax are the two integers. (No brackets, inclusive)
 
-`dice NdN` Rolls some dice, in which N1 is the number of dice to roll and N2 is the number of sides.
+`random dice NdN` Rolls some dice, in which N1 is the number of dice to roll and N2 is the number of sides.
 
-`rival` Posts a random character from the Rivals of Aether roster.
+`random rival` Posts a random character from the Rivals of Aether roster.
 
-`weapon` Picks a weapon and style from the Monster Hunter series.'''
+`random weapon` Picks a weapon and style from the Monster Hunter series.'''
+
+coinsText = '''`coins give [amount] [username]` Donate your coins to another user. Please note you must use their actual username, and not the server\'s nickname. If there are spaces in their name, wrap their name in quotation marks. If two people have the same name, use the `name#0000` format to pick out a specific person.
+
+`coins add` Once per day, I will pay you 10 coins for talking to me. :heart:'''
 
 aboutText = '''Hello, my name is Tsukino Mai（月野舞）, and you\'re viewing version %s of me! I was created by Linzolle#2608 in order for her to create a customised bot based on whatever functions she wanted to implement. If you have any questions, join Linzolle\'s development server https://discord.gg/Qj4HXeX, or contact her on her Twitter, @Linzolle.
 You can call me Mai, and use female pronouns for me. (Even though I\'m actually just a sequence of binary programmed to respond to you!)

@@ -299,7 +299,7 @@ class Tsukino(discord.Client):
                 else:
                     return await self.add_to_coin(message.author, fr)
         elif arg1 == 'help':
-            return Response('`give [amount] [username]` Donate your coins to another user. Please note you must use their actual username, and not the server\'s nickname. If there are spaces in their name, wrap their name in quotation marks. If two people have the same name, use the `name#0000` format to pick out a specific person.\n`add` Once per day, I will pay you 10 coins for talking to me. :heart:', private=True)
+            return Response(coinsText, private=True)
         elif arg1 == 'add':
             with open('config/coin_timer.json', 'r') as fp:
                 fp = json.load(fp)
