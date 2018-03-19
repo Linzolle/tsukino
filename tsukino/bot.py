@@ -350,7 +350,10 @@ class Tsukino(discord.Client):
                     if isinstance(int(arg2), int):
                         arg2 = int(arg2)
                         if arg3:
-                            user = message.server.get_member_named(arg3)
+                            if (message.mentions):
+                                user = list(map(message.server.get_member, message.raw_mentions))[0]
+                            else:
+                                user = message.server.get_member_named(arg3)
                         else:
                             raise CommandError('Oops, you need a name in the second field. `give [amount] [username]`')
                         if user:
